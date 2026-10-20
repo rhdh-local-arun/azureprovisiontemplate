@@ -1,0 +1,314 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: azure-infrastructure-provisioner
+  title: Azure Infrastructure Provisioner
+  description: Provision Azure resources including AKS clusters and Virtual Machines
+  tags:
+    - azure
+    - kubernetes
+    - infrastructure
+    - terraform
+    - aks
+    - vm
+spec:
+  owner: platform-team
+  type: infrastructure
+
+  parameters:
+    - title: Project Information
+      required:
+        - name
+        - owner
+      properties:
+        name:
+          title: Project Name
+          type: string
+          description: Unique name for your Azure infrastructure project
+          ui:autofocus: true
+          ui:options:
+            rows: 5
+        description:
+          title: Description
+          type: string
+          description: A brief description of this infrastructure
+        owner:
+          title: Owner
+          type: string
+          description: Owner of the infrastructure
+          ui:field: OwnerPicker
+          ui:options:
+            catalogFilter:
+              kind: [Group, User]
+
+    - title: Azure Configuration
+      required:
+        - azureRegion
+        - resourceType
+      properties:
+        azureRegion:
+          title: Azure Region
+          type: string
+          description: Azure region where resources will be deployed
+          default: eastus
+          enum:
+            - eastus
+            - eastus2
+            - westus
+            - westus2
+            - centralus
+            - northeurope
+            - westeurope
+            - uksouth
+            - southeastasia
+            - japaneast
+            - australiaeast
+          enumNames:
+            - 'East US'
+            - 'East US 2'
+            - 'West US'
+            - 'West US 2'
+            - 'Central US'
+            - 'North Europe'
+            - 'West Europe'
+            - 'UK South'
+            - 'Southeast Asia'
+            - 'Japan East'
+            - 'Australia East'
+
+        resourceType:
+          title: Resource Type
+          type: string
+          description: Type of Azure resource to provision
+          default: aks
+          enum:
+            - aks
+            - vm
+            - both
+          enumNames:
+            - 'AKS Cluster'
+            - 'Virtual Machine'
+            - 'Both AKS and VM'
+
+        environment:
+          title: Environment
+          type: string
+          description: Environment type
+          default: dev
+          enum:
+            - dev
+            - staging
+            - prod
+
+    - title: AKS Configuration
+      description: Configure your Azure Kubernetes Service cluster
+      dependencies:
+        resourceType:
+          oneOf:
+            - properties:
+                resourceType:
+                  enum:
+                    - aks
+                    - both
+      properties:
+        aksNodeCount:
+          title: Node Count
+          type: integer
+          description: Number of nodes in the AKS cluster
+          default: 3
+          minimum: 1
+          maximum: 100
+
+        aksNodeSize:
+          title: Node Size
+          type: string
+          description: VM size for AKS nodes
+          default: Standard_D2s_v3
+          enum:
+            - Standard_B2s
+            - Standard_D2s_v3
+            - Standard_D4s_v3
+            - Standard_D8s_v3
+            - Standard_E2s_v3
+            - Standard_E4s_v3
+          enumNames:
+            - 'B2s (2 vCPU, 4 GB RAM) - Dev/Test'
+            - 'D2s_v3 (2 vCPU, 8 GB RAM) - General Purpose'
+            - 'D4s_v3 (4 vCPU, 16 GB RAM) - General Purpose'
+            - 'D8s_v3 (8 vCPU, 32 GB RAM) - General Purpose'
+            - 'E2s_v3 (2 vCPU, 16 GB RAM) - Memory Optimized'
+            - 'E4s_v3 (4 vCPU, 32 GB RAM) - Memory Optimized'
+
+        kubernetesVersion:
+          title: Kubernetes Version
+          type: string
+          description: Kubernetes version for AKS
+          default: '1.28'
+          enum:
+            - '1.27'
+            - '1.28'
+            - '1.29'
+
+        enableAutoScaling:
+          title: Enable Auto Scaling
+          type: boolean
+          description: Enable cluster autoscaler
+          default: true
+
+        minNodeCount:
+          title: Minimum Node Count
+          type: integer
+          description: Minimum number of nodes when autoscaling is enabled
+          default: 1
+          minimum: 1
+
+        maxNodeCount:
+          title: Maximum Node Count
+          type: integer
+          description: Maximum number of nodes when autoscaling is enabled
+          default: 10
+          minimum: 1
+
+    - title: VM Configuration
+      description: Configure your Azure Virtual Machine
+      dependencies:
+        resourceType:
+          oneOf:
+            - properties:
+                resourceType:
+                  enum:
+                    - vm
+                    - both
+      properties:
+        vmSize:
+          title: VM Size
+          type: string
+          description: Azure VM size
+          default: Standard_D2s_v3
+          enum:
+            - Standard_B1s
+            - Standard_B2s
+            - Standard_D2s_v3
+            - Standard_D4s_v3
+            - Standard_E2s_v3
+            - Standard_F2s_v2
+          enumNames:
+            - 'B1s (1 vCPU, 1 GB RAM) - Burstable'
+            - 'B2s (2 vCPU, 4 GB RAM) - Burstable'
+            - 'D2s_v3 (2 vCPU, 8 GB RAM) - General Purpose'
+            - 'D4s_v3 (4 vCPU, 16 GB RAM) - General Purpose'
+            - 'E2s_v3 (2 vCPU, 16 GB RAM) - Memory Optimized'
+            - 'F2s_v2 (2 vCPU, 4 GB RAM) - Compute Optimized'
+
+        vmOS:
+          title: Operating System
+          type: string
+          description: VM operating system
+          default: ubuntu
+          enum:
+            - ubuntu
+            - rhel
+            - windows
+          enumNames:
+            - 'Ubuntu 22.04 LTS'
+            - 'Red Hat Enterprise Linux 9'
+            - 'Windows Server 2022'
+
+        diskSize:
+          title: Disk Size (GB)
+          type: integer
+          description: OS disk size in GB
+          default: 128
+          minimum: 30
+          maximum: 1024
+
+        enablePublicIP:
+          title: Enable Public IP
+          type: boolean
+          description: Assign a public IP address to the VM
+          default: true
+
+    - title: Repository Configuration
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+              - gitlab.com
+
+  steps:
+    - id: fetch-base
+      name: Fetch Base Template
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+          owner: ${{ parameters.owner }}
+          azureRegion: ${{ parameters.azureRegion }}
+          resourceType: ${{ parameters.resourceType }}
+          environment: ${{ parameters.environment }}
+          aksNodeCount: ${{ parameters.aksNodeCount }}
+          aksNodeSize: ${{ parameters.aksNodeSize }}
+          kubernetesVersion: ${{ parameters.kubernetesVersion }}
+          enableAutoScaling: ${{ parameters.enableAutoScaling }}
+          minNodeCount: ${{ parameters.minNodeCount }}
+          maxNodeCount: ${{ parameters.maxNodeCount }}
+          vmSize: ${{ parameters.vmSize }}
+          vmOS: ${{ parameters.vmOS }}
+          diskSize: ${{ parameters.diskSize }}
+          enablePublicIP: ${{ parameters.enablePublicIP }}
+          repoUrl: ${{ parameters.repoUrl }}
+
+    - id: publish
+      name: Publish to Repository
+      action: publish:github
+      input:
+        allowedHosts: ['github.com']
+        description: ${{ parameters.description }}
+        repoUrl: ${{ parameters.repoUrl }}
+        defaultBranch: main
+        repoVisibility: private
+        deleteBranchOnMerge: true
+        protectDefaultBranch: false
+        secrets:
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - id: register
+      name: Register Component
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+
+    # Optional: Create GitHub Environment for deployment approvals
+    # Uncomment if you want manual approval before Terraform applies
+    # - id: create-github-environment
+    #   name: Create GitHub Environment
+    #   action: github:environment:create
+    #   input:
+    #     repoUrl: ${{ parameters.repoUrl }}
+    #     name: ${{ parameters.environment }}
+    #     deploymentBranchPolicy: protected_branches
+
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}
+      - title: GitHub Actions
+        url: ${{ steps.publish.output.remoteUrl }}/actions
+      - title: Azure Portal
+        url: https://portal.azure.com

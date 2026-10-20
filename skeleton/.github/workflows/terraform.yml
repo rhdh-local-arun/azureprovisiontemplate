@@ -1,0 +1,178 @@
+name: 'Terraform Azure Infrastructure'
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
+  workflow_dispatch:
+
+env:
+  TF_VERSION: '1.5.7'
+  AZURE_SUBSCRIPTION_ID: {% raw %}${{ secrets.AZURE_SUBSCRIPTION_ID }}{% endraw %}
+  AZURE_TENANT_ID: {% raw %}${{ secrets.AZURE_TENANT_ID }}{% endraw %}
+  AZURE_CLIENT_ID: {% raw %}${{ secrets.AZURE_CLIENT_ID }}{% endraw %}
+  AZURE_CLIENT_SECRET: {% raw %}${{ secrets.AZURE_CLIENT_SECRET }}{% endraw %}
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  terraform:
+    name: 'Terraform'
+    runs-on: ubuntu-latest
+    # Optional: Uncomment to require approval before apply
+    # You must create the environment in GitHub Settings first
+    # environment: ${{ values.environment }}
+
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: {% raw %}${{ env.TF_VERSION }}{% endraw %}
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: {% raw %}${{ secrets.AZURE_CREDENTIALS }}{% endraw %}
+
+      - name: Create Backend Storage (if not exists)
+        run: |
+          # Create resource group for state
+          az group create \
+            --name tfstate-rg \
+            --location ${{ values.azureRegion }} \
+            --output none || true
+
+          # Create storage account
+          az storage account create \
+            --resource-group tfstate-rg \
+            --name tfstate{% raw %}${{ github.event.repository.name }}{% endraw %} \
+            --sku Standard_LRS \
+            --encryption-services blob \
+            --https-only true \
+            --min-tls-version TLS1_2 \
+            --allow-blob-public-access false \
+            --output none || true
+
+          # Get account key
+          ACCOUNT_KEY=$(az storage account keys list \
+            --resource-group tfstate-rg \
+            --account-name tfstate{% raw %}${{ github.event.repository.name }}{% endraw %} \
+            --query '[0].value' -o tsv)
+
+          # Create container
+          az storage container create \
+            --name tfstate \
+            --account-name tfstate{% raw %}${{ github.event.repository.name }}{% endraw %} \
+            --account-key $ACCOUNT_KEY \
+            --output none || true
+
+      - name: Terraform Format Check
+        id: fmt
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: Terraform Init
+        id: init
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=tfstate-rg" \
+            -backend-config="storage_account_name=tfstate{% raw %}${{ github.event.repository.name }}{% endraw %}" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=${{ values.name }}-${{ values.environment }}.tfstate"
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        if: github.event_name == 'pull_request'
+        run: terraform plan -no-color -input=false
+        continue-on-error: true
+        env:
+          ARM_CLIENT_ID: {% raw %}${{ env.AZURE_CLIENT_ID }}{% endraw %}
+          ARM_CLIENT_SECRET: {% raw %}${{ env.AZURE_CLIENT_SECRET }}{% endraw %}
+          ARM_SUBSCRIPTION_ID: {% raw %}${{ env.AZURE_SUBSCRIPTION_ID }}{% endraw %}
+          ARM_TENANT_ID: {% raw %}${{ env.AZURE_TENANT_ID }}{% endraw %}
+
+      - name: Comment PR with Plan
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n{% raw %}${{ steps.plan.outputs.stdout }}{% endraw %}"
+        with:
+          github-token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
+          script: |
+            const output = `#### Terraform Format and Style 🖌\`{% raw %}${{ steps.fmt.outcome }}{% endraw %}\`
+            #### Terraform Initialization ⚙️\`{% raw %}${{ steps.init.outcome }}{% endraw %}\`
+            #### Terraform Validation 🤖\`{% raw %}${{ steps.validate.outcome }}{% endraw %}\`
+            #### Terraform Plan 📖\`{% raw %}${{ steps.plan.outcome }}{% endraw %}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Pushed by: @{% raw %}${{ github.actor }}{% endraw %}, Action: \`{% raw %}${{ github.event_name }}{% endraw %}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve -input=false
+        env:
+          ARM_CLIENT_ID: {% raw %}${{ env.AZURE_CLIENT_ID }}{% endraw %}
+          ARM_CLIENT_SECRET: {% raw %}${{ env.AZURE_CLIENT_SECRET }}{% endraw %}
+          ARM_SUBSCRIPTION_ID: {% raw %}${{ env.AZURE_SUBSCRIPTION_ID }}{% endraw %}
+          ARM_TENANT_ID: {% raw %}${{ env.AZURE_TENANT_ID }}{% endraw %}
+
+      - name: Terraform Output
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        id: output
+        run: terraform output -json
+
+      - name: Create Deployment Summary
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          echo "## 🚀 Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Resources Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "- **Resource Group:** \`rg-${{ values.name }}-${{ values.environment }}\`" >> $GITHUB_STEP_SUMMARY
+          {%- if values.resourceType == 'aks' or values.resourceType == 'both' %}
+          echo "- **AKS Cluster:** \`aks-${{ values.name }}-${{ values.environment }}\`" >> $GITHUB_STEP_SUMMARY
+          {%- endif %}
+          {%- if values.resourceType == 'vm' or values.resourceType == 'both' %}
+          echo "- **Virtual Machine:** \`vm-${{ values.name }}-${{ values.environment }}\`" >> $GITHUB_STEP_SUMMARY
+          {%- endif %}
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Access" >> $GITHUB_STEP_SUMMARY
+          echo "View resources in [Azure Portal](https://portal.azure.com)" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,30 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.name }}
+  description: ${{ values.description }}
+  annotations:
+    github.com/project-slug: ${{ values.repoUrl | parseRepoUrl | pick('owner') }}/${{ values.repoUrl | parseRepoUrl | pick('repo') }}
+    backstage.io/techdocs-ref: dir:.
+    azure.com/region: ${{ values.azureRegion }}
+    azure.com/environment: ${{ values.environment }}
+  tags:
+    - azure
+    - infrastructure
+    - terraform
+    {%- if values.resourceType == 'aks' or values.resourceType == 'both' %}
+    - aks
+    - kubernetes
+    {%- endif %}
+    {%- if values.resourceType == 'vm' or values.resourceType == 'both' %}
+    - virtual-machine
+    {%- endif %}
+  links:
+    - url: https://portal.azure.com
+      title: Azure Portal
+      icon: cloud
+spec:
+  type: infrastructure
+  lifecycle: ${{ values.environment }}
+  owner: ${{ values.owner }}
+  system: cloud-infrastructure

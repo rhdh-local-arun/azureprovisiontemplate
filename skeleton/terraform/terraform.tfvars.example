@@ -1,0 +1,28 @@
+# Example Terraform Variables
+# Copy this file to terraform.tfvars and update with your values
+
+# Project Configuration
+project_name = "${{ values.name }}"
+environment  = "${{ values.environment }}"
+azure_region = "${{ values.azureRegion }}"
+
+{%- if values.resourceType == 'aks' or values.resourceType == 'both' %}
+
+# AKS Configuration
+aks_node_count      = ${{ values.aksNodeCount }}
+aks_node_size       = "${{ values.aksNodeSize }}"
+kubernetes_version  = "${{ values.kubernetesVersion }}"
+enable_auto_scaling = ${{ values.enableAutoScaling }}
+min_node_count      = ${{ values.minNodeCount }}
+max_node_count      = ${{ values.maxNodeCount }}
+{%- endif %}
+
+{%- if values.resourceType == 'vm' or values.resourceType == 'both' %}
+
+# VM Configuration
+vm_size          = "${{ values.vmSize }}"
+vm_os            = "${{ values.vmOS }}"
+disk_size_gb     = ${{ values.diskSize }}
+enable_public_ip = ${{ values.enablePublicIP }}
+admin_username   = "azureadmin"
+{%- endif %}

@@ -1,0 +1,20 @@
+# Azure Storage Backend Configuration
+# Rename this file to backend.tf to use Azure Storage + Pipelines
+
+# This requires CI/CD pipelines (GitHub Actions or Azure DevOps) to run Terraform
+
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "tfstate-rg"
+    storage_account_name = "tfstate${{ values.name }}"
+    container_name       = "tfstate"
+    key                  = "${{ values.name }}-${{ values.environment }}.tfstate"
+  }
+}
+
+# How to set up:
+# 1. Rename this file: mv backend-azure.tf.example backend.tf
+# 2. Configure GitHub Actions secrets OR Azure DevOps service connection
+# 3. Push to Git - Pipeline creates backend storage and applies Terraform
+#
+# Backend storage is auto-created by the pipeline, no manual setup needed!

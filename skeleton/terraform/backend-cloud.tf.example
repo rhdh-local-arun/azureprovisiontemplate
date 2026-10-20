@@ -1,0 +1,23 @@
+# Terraform Cloud Backend Configuration
+# Rename this file to backend.tf to use Terraform Cloud
+
+# This enables automatic Terraform runs on Git push - NO PIPELINE NEEDED!
+
+terraform {
+  cloud {
+    organization = "YOUR_ORG_NAME"  # TODO: Update with your Terraform Cloud organization name
+
+    workspaces {
+      name = "${{ values.name }}-${{ values.environment }}"
+    }
+  }
+}
+
+# How to set up:
+# 1. Create account at https://app.terraform.io/
+# 2. Create organization or use existing
+# 3. Update organization name above
+# 4. Rename this file: mv backend-cloud.tf.example backend.tf
+# 5. Run: terraform login
+# 6. Connect workspace to Git repo in Terraform Cloud UI
+# 7. Push to Git - Terraform Cloud automatically applies!
