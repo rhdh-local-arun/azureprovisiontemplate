@@ -12,7 +12,7 @@ metadata:
     - aks
     - vm
 spec:
-  owner: platform-team
+  owner: group:default/rhdh-team
   type: infrastructure
 
   parameters:
