@@ -64,6 +64,21 @@ This project supports **two deployment modes**:
 
 ### Quick Start
 
+#### 1️⃣ Setup Azure Credentials (Required!)
+
+📖 **See [docs/SETUP_AZURE_CREDENTIALS.md](docs/SETUP_AZURE_CREDENTIALS.md)** for detailed instructions.
+
+Quick version:
+```bash
+# Create service principal
+az ad sp create-for-rbac --name "${{ values.name }}-sp" --role Contributor --scopes /subscriptions/<subscription-id> --sdk-auth
+
+# Add secrets to GitHub: Settings → Secrets → Actions
+# Or add to Terraform Cloud: Workspace → Variables
+```
+
+#### 2️⃣ Choose Deployment Mode
+
 **For Terraform Cloud (Fastest):**
 ```bash
 mv terraform/backend-cloud.tf.example terraform/backend.tf
@@ -73,7 +88,7 @@ mv terraform/backend-cloud.tf.example terraform/backend.tf
 **For Pipelines:**
 ```bash
 mv terraform/backend-azure.tf.example terraform/backend.tf
-# Configure GitHub secrets or Azure DevOps service connection
+# Secrets already configured in step 1
 ```
 
 ### 1. Setup Azure Service Principal

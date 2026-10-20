@@ -288,19 +288,22 @@ spec:
       name: Publish to Repository
       action: publish:github
       input:
-        #allowedHosts: ['github.com']
+        allowedHosts: ['github.com']
         description: ${{ parameters.description }}
         repoUrl: ${{ parameters.repoUrl }}
         defaultBranch: main
         repoVisibility: private
         deleteBranchOnMerge: true
         protectDefaultBranch: false
-        secrets:
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+        # Optional: Auto-inject Azure secrets into GitHub repository
+        # Uncomment if your Backstage backend has these secrets configured
+        # See SECRETS_CONFIGURATION.md for setup details
+        # secrets:
+        #   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        #   AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        #   AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        #   AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        #   AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
     - id: register
       name: Register Component
