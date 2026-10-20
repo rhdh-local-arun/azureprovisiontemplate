@@ -9,6 +9,11 @@ azure_region = "${{ values.azureRegion }}"
 {%- if values.resourceType == 'aks' or values.resourceType == 'both' %}
 
 # AKS Configuration
+{%- if values.aksClusterName %}
+aks_cluster_name    = "${{ values.aksClusterName }}"
+{%- else %}
+# aks_cluster_name  = ""  # Leave empty for auto-generated name
+{%- endif %}
 aks_node_count      = ${{ values.aksNodeCount }}
 aks_node_size       = "${{ values.aksNodeSize }}"
 kubernetes_version  = "${{ values.kubernetesVersion }}"
@@ -20,6 +25,11 @@ max_node_count      = ${{ values.maxNodeCount }}
 {%- if values.resourceType == 'vm' or values.resourceType == 'both' %}
 
 # VM Configuration
+{%- if values.vmName %}
+vm_name          = "${{ values.vmName }}"
+{%- else %}
+# vm_name        = ""  # Leave empty for auto-generated name
+{%- endif %}
 vm_size          = "${{ values.vmSize }}"
 vm_os            = "${{ values.vmOS }}"
 disk_size_gb     = ${{ values.diskSize }}

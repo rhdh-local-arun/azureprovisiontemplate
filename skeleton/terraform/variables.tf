@@ -19,6 +19,12 @@ variable "project_name" {
 {%- if values.resourceType == 'aks' or values.resourceType == 'both' %}
 
 # AKS Variables
+variable "aks_cluster_name" {
+  description = "Custom AKS cluster name"
+  type        = string
+  default     = "${{ values.aksClusterName }}"
+}
+
 variable "aks_node_count" {
   description = "Number of nodes in AKS cluster"
   type        = number
@@ -59,6 +65,12 @@ variable "max_node_count" {
 {%- if values.resourceType == 'vm' or values.resourceType == 'both' %}
 
 # VM Variables
+variable "vm_name" {
+  description = "Custom VM name"
+  type        = string
+  default     = "${{ values.vmName }}"
+}
+
 variable "vm_size" {
   description = "Azure VM size"
   type        = string

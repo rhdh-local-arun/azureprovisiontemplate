@@ -111,6 +111,14 @@ spec:
                     - aks
                     - both
       properties:
+        aksClusterName:
+          title: AKS Cluster Name (Optional)
+          type: string
+          description: Custom name for the AKS cluster (leave empty for auto-generated name)
+          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+          maxLength: 63
+          ui:help: 'Default: aks-{project-name}-{environment}'
+
         aksNodeCount:
           title: Node Count
           type: integer
@@ -180,6 +188,14 @@ spec:
                     - vm
                     - both
       properties:
+        vmName:
+          title: VM Name (Optional)
+          type: string
+          description: Custom name for the Virtual Machine (leave empty for auto-generated name)
+          pattern: '^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?$'
+          maxLength: 64
+          ui:help: 'Default: vm-{project-name}-{environment}'
+
         vmSize:
           title: VM Size
           type: string
@@ -254,12 +270,14 @@ spec:
           azureRegion: ${{ parameters.azureRegion }}
           resourceType: ${{ parameters.resourceType }}
           environment: ${{ parameters.environment }}
+          aksClusterName: ${{ parameters.aksClusterName }}
           aksNodeCount: ${{ parameters.aksNodeCount }}
           aksNodeSize: ${{ parameters.aksNodeSize }}
           kubernetesVersion: ${{ parameters.kubernetesVersion }}
           enableAutoScaling: ${{ parameters.enableAutoScaling }}
           minNodeCount: ${{ parameters.minNodeCount }}
           maxNodeCount: ${{ parameters.maxNodeCount }}
+          vmName: ${{ parameters.vmName }}
           vmSize: ${{ parameters.vmSize }}
           vmOS: ${{ parameters.vmOS }}
           diskSize: ${{ parameters.diskSize }}

@@ -8,6 +8,12 @@ variable "environment" {
   type        = string
 }
 
+variable "vm_name" {
+  description = "Custom VM name (optional)"
+  type        = string
+  default     = ""
+}
+
 variable "location" {
   description = "Azure region"
   type        = string

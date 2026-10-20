@@ -62,6 +62,7 @@ module "aks" {
   resource_group_name = azurerm_resource_group.main.name
   subnet_id           = module.networking.aks_subnet_id
 
+  cluster_name        = var.aks_cluster_name
   node_count          = var.aks_node_count
   node_size           = var.aks_node_size
   kubernetes_version  = var.kubernetes_version
@@ -86,6 +87,7 @@ module "vm" {
   resource_group_name = azurerm_resource_group.main.name
   subnet_id           = module.networking.vm_subnet_id
 
+  vm_name          = var.vm_name
   vm_size          = var.vm_size
   vm_os            = var.vm_os
   disk_size_gb     = var.disk_size_gb

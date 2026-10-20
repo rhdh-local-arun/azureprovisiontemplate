@@ -63,7 +63,7 @@ resource "azurerm_key_vault_secret" "admin_password" {
 # Linux Virtual Machine
 resource "azurerm_linux_virtual_machine" "main" {
   count                 = var.vm_os != "windows" ? 1 : 0
-  name                  = "vm-${var.project_name}-${var.environment}"
+  name                  = var.vm_name != "" ? var.vm_name : "vm-${var.project_name}-${var.environment}"
   location              = var.location
   resource_group_name   = var.resource_group_name
   size                  = var.vm_size
@@ -98,7 +98,7 @@ resource "azurerm_linux_virtual_machine" "main" {
 # Windows Virtual Machine
 resource "azurerm_windows_virtual_machine" "main" {
   count                 = var.vm_os == "windows" ? 1 : 0
-  name                  = "vm-${var.project_name}-${var.environment}"
+  name                  = var.vm_name != "" ? var.vm_name : "vm-${var.project_name}-${var.environment}"
   location              = var.location
   resource_group_name   = var.resource_group_name
   size                  = var.vm_size

@@ -8,6 +8,12 @@ variable "environment" {
   type        = string
 }
 
+variable "cluster_name" {
+  description = "Custom AKS cluster name (optional)"
+  type        = string
+  default     = ""
+}
+
 variable "location" {
   description = "Azure region"
   type        = string
