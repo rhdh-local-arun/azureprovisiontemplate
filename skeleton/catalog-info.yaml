@@ -27,4 +27,4 @@ spec:
   type: infrastructure
   lifecycle: ${{ values.environment }}
   owner: ${{ values.owner }}
-  system: cloud-infrastructure
+  system: rhdh-local
