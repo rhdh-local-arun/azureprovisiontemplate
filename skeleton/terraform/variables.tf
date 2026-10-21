@@ -74,25 +74,25 @@ variable "vm_name" {
 variable "vm_size" {
   description = "Azure VM size"
   type        = string
-  default     = "${{ values.vmSize }}"
+  default     = "{%- if values.vmSize %}${{ values.vmSize }}{%- else %}Standard_D2s_v3{%- endif %}"
 }
 
 variable "vm_os" {
   description = "VM operating system"
   type        = string
-  default     = "${{ values.vmOS }}"
+  default     = "{%- if values.vmOS %}${{ values.vmOS }}{%- else %}ubuntu{%- endif %}"
 }
 
 variable "disk_size_gb" {
   description = "OS disk size in GB"
   type        = number
-  default     = ${{ values.diskSize }}
+  default     = {%- if values.diskSize %}${{ values.diskSize }}{%- else %}128{%- endif %}
 }
 
 variable "enable_public_ip" {
   description = "Enable public IP for VM"
   type        = bool
-  default     = ${{ values.enablePublicIP }}
+  default     = {%- if values.enablePublicIP is defined %}${{ values.enablePublicIP }}{%- else %}true{%- endif %}
 }
 
 variable "admin_username" {

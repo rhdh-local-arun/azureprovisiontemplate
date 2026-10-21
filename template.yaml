@@ -187,6 +187,10 @@ spec:
                   enum:
                     - vm
                     - both
+              required:
+                - vmSize
+                - vmOS
+                - diskSize
       properties:
         vmName:
           title: VM Name (Optional)
@@ -200,7 +204,6 @@ spec:
           title: VM Size
           type: string
           description: Azure VM size
-          default: Standard_D2s_v3
           enum:
             - Standard_B1s
             - Standard_B2s
@@ -220,7 +223,6 @@ spec:
           title: Operating System
           type: string
           description: VM operating system
-          default: ubuntu
           enum:
             - ubuntu
             - rhel
@@ -234,7 +236,6 @@ spec:
           title: Disk Size (GB)
           type: integer
           description: OS disk size in GB
-          default: 128
           minimum: 30
           maximum: 1024
 
@@ -242,7 +243,6 @@ spec:
           title: Enable Public IP
           type: boolean
           description: Assign a public IP address to the VM
-          default: true
 
     - title: Repository Configuration
       required:
