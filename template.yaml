@@ -101,23 +101,13 @@ spec:
             - prod
 
     - title: AKS Configuration
-      description: Configure your Azure Kubernetes Service cluster
-      dependencies:
-        resourceType:
-          oneOf:
-            - properties:
-                resourceType:
-                  enum:
-                    - aks
-                    - both
+      description: Configure your Azure Kubernetes Service cluster (only applies if AKS or Both selected)
       properties:
         aksClusterName:
-          title: AKS Cluster Name (Optional)
+          title: AKS Cluster Name
           type: string
-          description: Custom name for the AKS cluster (leave empty for auto-generated name)
-          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
-          maxLength: 63
-          ui:help: 'Default: aks-{project-name}-{environment}'
+          description: Name for the AKS cluster
+          default: ""
 
         aksNodeCount:
           title: Node Count
@@ -178,28 +168,19 @@ spec:
           minimum: 1
 
     - title: VM Configuration
-      description: Configure your Azure Virtual Machine
-      dependencies:
-        resourceType:
-          oneOf:
-            - properties:
-                resourceType:
-                  enum:
-                    - vm
-                    - both
+      description: Configure your Azure Virtual Machine (only applies if VM or Both selected)
       properties:
         vmName:
-          title: VM Name (Optional)
+          title: VM Name
           type: string
-          description: Custom name for the Virtual Machine (leave empty for auto-generated name)
-          pattern: '^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?$'
-          maxLength: 64
-          ui:help: 'Default: vm-{project-name}-{environment}'
+          description: Name for the Virtual Machine
+          default: ""
 
         vmSize:
           title: VM Size
           type: string
           description: Azure VM size
+          default: Standard_D2s_v3
           enum:
             - Standard_B1s
             - Standard_B2s
@@ -219,6 +200,7 @@ spec:
           title: Operating System
           type: string
           description: VM operating system
+          default: ubuntu
           enum:
             - ubuntu
             - rhel
@@ -232,6 +214,7 @@ spec:
           title: Disk Size (GB)
           type: integer
           description: OS disk size in GB
+          default: 128
           minimum: 30
           maximum: 1024
 
@@ -239,6 +222,7 @@ spec:
           title: Enable Public IP
           type: boolean
           description: Assign a public IP address to the VM
+          default: true
 
     - title: Repository Configuration
       required:
