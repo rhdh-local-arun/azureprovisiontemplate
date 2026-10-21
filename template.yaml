@@ -187,10 +187,6 @@ spec:
                   enum:
                     - vm
                     - both
-              required:
-                - vmSize
-                - vmOS
-                - diskSize
       properties:
         vmName:
           title: VM Name (Optional)
